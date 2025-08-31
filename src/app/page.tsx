@@ -5,12 +5,15 @@ import "@aws-amplify/ui-react/styles.css";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
 
 function RoleRedirect() {
   const router = useRouter();
+
   useEffect(() => {
     let mounted = true;
-    (async () => {
+
+    const routeByGroup = async () => {
       try {
         const session = await fetchAuthSession();
         const groups =
@@ -18,15 +21,34 @@ function RoleRedirect() {
             | string[]
             | undefined) ?? [];
         if (!mounted || groups.length === 0) return;
+
         if (groups.includes("ClinicUser")) router.replace("/upload");
         else if (groups.includes("HealthcareTeam")) router.replace("/reports");
         else if (groups.includes("Admin")) router.replace("/admin");
-      } catch {}
-    })();
+      } catch {
+        /* not signed in yet */
+      }
+    };
+
+    // run on load
+    routeByGroup();
+
+    // run after sign-in / token refresh / sign-out
+    const unlisten = Hub.listen("auth", ({ payload }) => {
+      if (payload.event === "signedIn" || payload.event === "tokenRefresh") {
+        routeByGroup();
+      }
+      if (payload.event === "signedOut") {
+        router.replace("/");
+      }
+    });
+
     return () => {
       mounted = false;
+      unlisten();
     };
   }, [router]);
+
   return null;
 }
 
