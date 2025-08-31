@@ -1,51 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAuthSession, signOut } from "aws-amplify/auth";
+import { useAuthenticator } from "@aws-amplify/ui-react";
 
 export default function NavBar() {
   const router = useRouter();
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const session = await fetchAuthSession();
-        if (!mounted) return;
-        const hasTokens = !!session.tokens?.idToken;
-        setIsAuthed(hasTokens);
+  // Re-render on auth changes (Amplify listens to Hub under the hood)
+  const { authStatus, user, signOut } = useAuthenticator((ctx) => [
+    ctx.authStatus,
+    ctx.user,
+  ]);
 
-        if (hasTokens) {
-          const payload = session.tokens!.idToken!.payload as Record<
-            string,
-            unknown
-          >;
-          const name =
-            (payload["cognito:username"] as string) ||
-            (payload["email"] as string) ||
-            null;
-          setUsername(name);
-        }
-      } catch {
-        if (mounted) setIsAuthed(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const isAuthed = authStatus === "authenticated";
+  const username =
+    (user?.username as string | undefined) ??
+    (user?.signInDetails?.loginId as string | undefined) ??
+    null;
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await signOut(); // Amplify v6 signOut
     } finally {
       router.replace("/");
     }
   };
+
+  // Optional: avoid brief flicker while Amplify initializes
+  if (authStatus === "configuring") return null;
 
   return (
     <nav

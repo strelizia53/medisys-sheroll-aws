@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import ConfigureAmplifyClientSide from "../components/ConfigureAmplifyClientSide";
 import AmplifyThemeProvider from "../components/AmplifyThemeProvider";
+import AuthProvider from "../components/AuthProvider";
 import NavBar from "../components/NavBar";
 
 export const metadata: Metadata = {
@@ -19,8 +20,10 @@ export default function RootLayout({
       <body>
         <ConfigureAmplifyClientSide />
         <AmplifyThemeProvider>
-          <NavBar />
-          <div className="page-shell">{children}</div>
+          <AuthProvider>
+            <NavBar />
+            <div className="page-shell">{children}</div>
+          </AuthProvider>
         </AmplifyThemeProvider>
       </body>
     </html>
