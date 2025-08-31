@@ -5,7 +5,7 @@ const awsConfig: ResourcesConfig = {
     Cognito: {
       userPoolId: "ap-south-1_tqlPMkUto",
       // ⬇️ Paste your PUBLIC (no secret) App client ID here
-      userPoolClientId: "7n2aqqktsdesjcocotv4o71c64 ",
+      userPoolClientId: "7n2aqqktsdesjcocotv4o71c64",
 
       // Hosted UI / OAuth settings
       loginWith: {
