@@ -1,14 +1,14 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import ConfigureAmplifyClientSide from "../components/ConfigureAmplifyClientSide";
+import AmplifyThemeProvider from "../components/AmplifyThemeProvider";
+import NavBar from "../components/NavBar";
 
-// (optional) SEO
 export const metadata: Metadata = {
   title: "MediSys",
   description: "Diagnostic report portal",
 };
 
-// ✅ Add a proper type for children (fixes “implicitly has any type”)
 export default function RootLayout({
   children,
 }: {
@@ -18,7 +18,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ConfigureAmplifyClientSide />
-        {children}
+        <AmplifyThemeProvider>
+          <NavBar />
+          <div className="page-shell">{children}</div>
+        </AmplifyThemeProvider>
       </body>
     </html>
   );
