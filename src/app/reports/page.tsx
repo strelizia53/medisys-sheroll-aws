@@ -263,7 +263,7 @@ export default function HealthcarePage() {
         {/* Detail panel */}
         {selected && (
           <div className="mt-8 border border-gray-700 rounded-lg">
-            <div className="flex items-center justify-between px-4 py-3 bg-gray-750 rounded-t-lg">
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-700 rounded-t-lg">
               <h2 className="text-lg font-semibold">
                 {selected.filename} · {selected.clinicId} · #{selected.uploadId}
               </h2>
