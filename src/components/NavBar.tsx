@@ -24,8 +24,8 @@ export default function NavBar() {
   const buttonGradientHover =
     "linear-gradient(90deg, var(--amplify-colors-brand-primary-90) 0%, var(--amplify-colors-brand-primary-80) 100%)";
 
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    await signOut();
     router.replace("/");
   };
 
