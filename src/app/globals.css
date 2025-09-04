@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+/* global color tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0f172a; /* slate-900 */
+  --foreground: #f8fafc; /* slate-50 */
 }
 
 :root {
@@ -12,37 +13,31 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  color-scheme: dark;
 }
 :root {
   --nav-height: 56px;
 }
 
-/* Softer page background and spacing under the navbar */
+/* page background and spacing under the navbar */
 .page-shell {
   min-height: calc(100dvh - var(--nav-height));
   padding: 24px;
   background: radial-gradient(
       1200px 600px at 10% -10%,
-      rgba(99, 102, 241, 0.1),
+      rgba(55, 48, 163, 0.35),
       transparent 40%
     ),
     radial-gradient(
       900px 500px at 100% 0%,
-      rgba(129, 140, 248, 0.08),
+      rgba(55, 48, 163, 0.25),
       transparent 50%
     ),
-    #f7f9fc;
+    var(--background);
 }
 
 /* Center the Authenticator and make it look like a card */
@@ -56,9 +51,10 @@ body {
 .auth-wrap .amplify-authenticator {
   max-width: 420px;
   width: 100%;
-  background: #fff;
+  background: #1f2937; /* slate-800 */
+  color: var(--foreground);
   border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   padding: 12px; /* Authenticator has its own padding; this just softens edges */
 }
 :root {

@@ -6,6 +6,12 @@ const medisysTheme = createTheme({
   name: "medisys",
   tokens: {
     colors: {
+      background: {
+        primary: { value: "var(--background)" },
+      },
+      font: {
+        primary: { value: "var(--foreground)" },
+      },
       // brand color for buttons/links
       brand: {
         primary: {
@@ -49,7 +55,7 @@ export default function AmplifyThemeProvider({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProvider theme={medisysTheme} colorMode="light">
+    <ThemeProvider theme={medisysTheme} colorMode="dark">
       {children}
     </ThemeProvider>
   );

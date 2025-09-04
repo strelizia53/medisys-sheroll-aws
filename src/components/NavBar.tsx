@@ -45,16 +45,16 @@ export default function NavBar() {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0.75rem 2rem",
-        borderBottom: "1px solid #e5e7eb",
-        background: "linear-gradient(90deg, #f8fafc 0%, #eef2ff 100%)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        borderBottom: "1px solid #1e293b",
+        background: "linear-gradient(90deg, #1e1b4b 0%, #312e81 100%)",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
       }}
     >
       <Link
         href="/"
         style={{
           textDecoration: "none",
-          color: "var(--amplify-colors-brand-primary-100)",
+          color: "#f8fafc",
           fontWeight: 700,
           fontSize: 22,
           letterSpacing: 1,
@@ -92,8 +92,8 @@ export default function NavBar() {
             <span
               style={{
                 fontSize: 15,
-                color: "var(--amplify-colors-brand-primary-80)",
-                background: "#eef2ff",
+                color: "var(--amplify-colors-brand-primary-90)",
+                background: "rgba(129,140,248,0.15)",
                 padding: "0.3rem 0.8rem",
                 borderRadius: 20,
                 fontWeight: 500,
@@ -113,7 +113,7 @@ export default function NavBar() {
                 fontWeight: 600,
                 fontSize: 15,
                 cursor: "pointer",
-                boxShadow: "0 1px 4px rgba(99,102,241,0.08)",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
                 transition: "background 0.2s",
               }}
               onMouseOver={(e) =>
@@ -140,7 +140,7 @@ export default function NavBar() {
               fontWeight: 600,
               fontSize: 15,
               textDecoration: "none",
-              boxShadow: "0 1px 4px rgba(99,102,241,0.08)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
               transition: "background 0.2s",
               display: "inline-block",
             }}
