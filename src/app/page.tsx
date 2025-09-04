@@ -59,9 +59,9 @@ export default function Home() {
         components={{
           Header() {
             return (
-              <div style={{ padding: "12px 16px 0" }}>
-                <h3 style={{ margin: 0 }}>Welcome to MediSys</h3>
-                <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>
+              <div className="mb-4 text-center">
+                <h3 className="text-lg font-semibold">Welcome to MediSys</h3>
+                <p className="text-sm text-slate-400">
                   Please sign in or create an account
                 </p>
               </div>
@@ -87,14 +87,7 @@ export default function Home() {
           },
           Footer() {
             return (
-              <div
-                style={{
-                  padding: 12,
-                  textAlign: "center",
-                  color: "#9ca3af",
-                  fontSize: 12,
-                }}
-              >
+              <div className="pt-4 text-center text-xs text-slate-500">
                 © {new Date().getFullYear()} MediSys
               </div>
             );
@@ -102,10 +95,17 @@ export default function Home() {
         }}
       >
         {({ signOut, user }) => (
-          <main style={{ padding: 24 }}>
+          <main className="page-shell space-y-4">
             <RoleRedirect />
-            <h1 style={{ marginBottom: 8 }}>Welcome {user?.username}</h1>
-            <button onClick={() => signOut?.()}>Sign out</button>
+            <h1 className="text-2xl font-semibold">
+              Welcome {user?.username}
+            </h1>
+            <button
+              className="self-start rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+              onClick={() => signOut?.()}
+            >
+              Sign out
+            </button>
           </main>
         )}
       </Authenticator>
