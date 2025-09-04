@@ -24,12 +24,9 @@ export default function NavBar() {
   const buttonGradientHover =
     "linear-gradient(90deg, var(--amplify-colors-brand-primary-90) 0%, var(--amplify-colors-brand-primary-80) 100%)";
 
-  const handleLogout = async () => {
-    try {
-      await signOut(); // Amplify v6 signOut
-    } finally {
-      router.replace("/");
-    }
+  const handleLogout = () => {
+    signOut();
+    router.replace("/");
   };
 
   // Optional: avoid brief flicker while Amplify initializes

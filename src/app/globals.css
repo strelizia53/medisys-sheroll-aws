@@ -13,11 +13,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  background: var(--background);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   color-scheme: dark;
+  margin: 0;
 }
 :root {
   --nav-height: 56px;
@@ -42,9 +47,10 @@ body {
 
 /* Center the Authenticator and make it look like a card */
 .auth-wrap {
-  min-height: calc(100dvh - var(--nav-height) - 48px);
+  min-height: calc(100dvh - var(--nav-height));
   display: grid;
   place-items: center;
+  background: #1f2937; /* slate-800 to match auth card */
 }
 
 /* style the internal card */
