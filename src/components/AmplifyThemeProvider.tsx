@@ -6,12 +6,18 @@ const medisysTheme = createTheme({
   name: "medisys",
   tokens: {
     colors: {
+      background: {
+        primary: { value: "var(--background)" },
+      },
+      font: {
+        primary: { value: "var(--foreground)" },
+      },
       // brand color for buttons/links
       brand: {
         primary: {
-          80: { value: "#0ea5e9" }, // main
-          90: { value: "#0284c7" }, // hover/focus
-          100: { value: "#0369a1" }, // active
+          80: { value: "var(--amplify-colors-brand-primary-80)" }, // main
+          90: { value: "var(--amplify-colors-brand-primary-90)" }, // hover/focus
+          100: { value: "var(--amplify-colors-brand-primary-100)" }, // active
         },
       },
     },
@@ -49,7 +55,7 @@ export default function AmplifyThemeProvider({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProvider theme={medisysTheme} colorMode="light">
+    <ThemeProvider theme={medisysTheme} colorMode="dark">
       {children}
     </ThemeProvider>
   );
