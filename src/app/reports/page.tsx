@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchAuthSession } from "aws-amplify/auth";
 
-/** Function URL for your Lambda (public read) */
+/** Function URL for your Lambda (public read + staff delete) */
 const FN_URL =
   "https://s47e7p42x7j5qgbuj2vkqcg5qe0blhxt.lambda-url.ap-south-1.on.aws/";
 
@@ -80,6 +81,7 @@ export default function HealthcarePage() {
   const [items, setItems] = useState<UploadMeta[]>([]);
   const [nextKey, setNextKey] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Detail state
   const [selected, setSelected] = useState<{
@@ -139,7 +141,7 @@ export default function HealthcarePage() {
 
         const url = new URL(FN_URL);
         url.searchParams.set("public", "detail");
-        url.searchParams.set("clinicId", clinicId); // optional in Lambda, but we have it
+        url.searchParams.set("clinicId", clinicId);
         url.searchParams.set("uploadId", uploadId);
         url.searchParams.set("limit", "100");
         if (startKey) url.searchParams.set("startKey", startKey);
@@ -164,6 +166,62 @@ export default function HealthcarePage() {
       }
     },
     []
+  );
+
+  const deleteUpload = useCallback(
+    async (clinicId: string, uploadId: string): Promise<void> => {
+      try {
+        if (
+          !confirm(
+            `Delete upload #${uploadId} from clinic ${clinicId}? This cannot be undone.`
+          )
+        )
+          return;
+
+        setDeletingId(uploadId);
+        setMsg("Getting token…");
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
+        if (!idToken) {
+          setMsg("You must be signed in (HealthcareTeam/Admin) to delete.");
+          return;
+        }
+
+        setMsg("Deleting…");
+        const url = new URL(FN_URL);
+        url.searchParams.set("action", "upload"); // Lambda expects action=upload on DELETE
+        url.searchParams.set("uploadId", uploadId);
+        url.searchParams.set("clinicId", clinicId); // staff can delete across clinics
+
+        const res = await fetch(url.toString(), {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+
+        const data = await readJsonSafe(res);
+
+        if (!res.ok) {
+          if (isErrorResponse(data))
+            throw new Error(data.message ?? data.error);
+          throw new Error(`Delete failed (${res.status})`);
+        }
+
+        // Success: remove from list and clear detail if it matches
+        setItems((prev) => prev.filter((i) => i.uploadId !== uploadId));
+        if (selected?.uploadId === uploadId) {
+          setSelected(null);
+          setDetailRows([]);
+          setDetailNextKey(undefined);
+        }
+        setMsg(`Deleted upload #${uploadId}`);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        setMsg(`Delete failed: ${message}`);
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [selected]
   );
 
   useEffect(() => {
@@ -236,7 +294,7 @@ export default function HealthcarePage() {
                     </td>
                     <td className="p-2">{it.status}</td>
                     <td className="p-2 text-right">{it.rowCount}</td>
-                    <td className="p-2 text-right">
+                    <td className="p-2 text-right flex gap-2 justify-end">
                       <button
                         className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
                         onClick={() => {
@@ -251,6 +309,20 @@ export default function HealthcarePage() {
                         }}
                       >
                         View
+                      </button>
+                      <button
+                        className={`px-3 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white ${
+                          deletingId === it.uploadId
+                            ? "opacity-60 cursor-not-allowed"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          void deleteUpload(it.clinicId, it.uploadId)
+                        }
+                        disabled={deletingId === it.uploadId}
+                        title="Requires HealthcareTeam/Admin sign-in"
+                      >
+                        {deletingId === it.uploadId ? "Deleting…" : "Delete"}
                       </button>
                     </td>
                   </tr>
@@ -329,8 +401,12 @@ export default function HealthcarePage() {
         )}
 
         <p className="mt-4 text-xs text-gray-500">
-          Note: This view is public (no JWT). For production, restrict access or
-          serve via a protected API.
+          View is public. Delete requires a signed-in user
+          (HealthcareTeam/Admin) — we obtain an ID token via Amplify and call
+          <code className="ml-1">
+            DELETE ?action=upload&amp;uploadId=...&amp;clinicId=...
+          </code>
+          .
         </p>
       </div>
     </main>
