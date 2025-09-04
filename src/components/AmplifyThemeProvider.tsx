@@ -9,9 +9,9 @@ const medisysTheme = createTheme({
       // brand color for buttons/links
       brand: {
         primary: {
-          80: { value: "#0ea5e9" }, // main
-          90: { value: "#0284c7" }, // hover/focus
-          100: { value: "#0369a1" }, // active
+          80: { value: "var(--amplify-colors-brand-primary-80)" }, // main
+          90: { value: "var(--amplify-colors-brand-primary-90)" }, // hover/focus
+          100: { value: "var(--amplify-colors-brand-primary-100)" }, // active
         },
       },
     },

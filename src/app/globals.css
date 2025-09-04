@@ -34,12 +34,12 @@ body {
   padding: 24px;
   background: radial-gradient(
       1200px 600px at 10% -10%,
-      rgba(14, 165, 233, 0.1),
+      rgba(99, 102, 241, 0.1),
       transparent 40%
     ),
     radial-gradient(
       900px 500px at 100% 0%,
-      rgba(2, 132, 199, 0.08),
+      rgba(129, 140, 248, 0.08),
       transparent 50%
     ),
     #f7f9fc;
@@ -62,9 +62,9 @@ body {
   padding: 12px; /* Authenticator has its own padding; this just softens edges */
 }
 :root {
-  --amplify-colors-brand-primary-80: #0ea5e9;
-  --amplify-colors-brand-primary-90: #0284c7;
-  --amplify-colors-brand-primary-100: #0369a1;
+  --amplify-colors-brand-primary-80: #6366f1;
+  --amplify-colors-brand-primary-90: #818cf8;
+  --amplify-colors-brand-primary-100: #3730a3;
   --amplify-radii-medium: 12px;
   --amplify-components-button-border-radius: var(--amplify-radii-medium);
 }
