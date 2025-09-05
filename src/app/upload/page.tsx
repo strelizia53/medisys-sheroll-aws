@@ -1,5 +1,6 @@
 "use client";
 
+import RequireGroup from "@/components/RequireGroup";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 
@@ -241,160 +242,158 @@ export default function UploadPage() {
   }, [detailFor, items]);
 
   return (
-    <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-10">
-      <div className="bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6 text-center">Clinic Uploads</h1>
-
-        {/* Uploader */}
-        <label className="block mb-4">
-          <span className="block mb-2 text-gray-300">Choose CSV file</span>
-          <input
-            type="file"
-            accept=".csv"
-            className="block w-full text-sm text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void upload(f);
-            }}
-          />
-        </label>
-
-        <p className="mt-3 text-sm min-h-[1.5em] text-gray-400">{msg}</p>
-
-        <div className="flex items-center gap-3">
-          <button
-            className="mt-2 px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-            onClick={() => void fetchList(false)}
-            disabled={loadingList}
-          >
-            {loadingList ? "Refreshing..." : "Refresh list"}
-          </button>
-          {nextKey && (
+    <RequireGroup allow={["ClinicUser"]}>
+      <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-10">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-4xl">
+          <h1 className="text-3xl font-bold mb-6 text-center">
+            Clinic Uploads
+          </h1>
+          {/* Uploader */}
+          <label className="block mb-4">
+            <span className="block mb-2 text-gray-300">Choose CSV file</span>
+            <input
+              type="file"
+              accept=".csv"
+              className="block w-full text-sm text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void upload(f);
+              }}
+            />
+          </label>
+          <p className="mt-3 text-sm min-h-[1.5em] text-gray-400">{msg}</p>
+          <div className="flex items-center gap-3">
             <button
               className="mt-2 px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-              onClick={() => void fetchList(true, nextKey)}
+              onClick={() => void fetchList(false)}
               disabled={loadingList}
             >
-              Load more
+              {loadingList ? "Refreshing..." : "Refresh list"}
             </button>
-          )}
-        </div>
-
-        {/* My uploads */}
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-300">
-                <th className="p-2">File</th>
-                <th className="p-2">Uploaded</th>
-                <th className="p-2">Status</th>
-                <th className="p-2 text-right">Rows</th>
-                <th className="p-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 ? (
-                <tr>
-                  <td className="p-2 text-gray-400" colSpan={5}>
-                    No uploads yet.
-                  </td>
+            {nextKey && (
+              <button
+                className="mt-2 px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                onClick={() => void fetchList(true, nextKey)}
+                disabled={loadingList}
+              >
+                Load more
+              </button>
+            )}
+          </div>
+          {/* My uploads */}
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-300">
+                  <th className="p-2">File</th>
+                  <th className="p-2">Uploaded</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2 text-right">Rows</th>
+                  <th className="p-2 text-right">Actions</th>
                 </tr>
-              ) : (
-                items.map((it) => (
-                  <tr key={it.SK} className="border-t border-gray-700">
-                    <td className="p-2">{it.filename}</td>
-                    <td className="p-2">
-                      {new Date(it.uploadedAt).toLocaleString()}
-                    </td>
-                    <td className="p-2">{it.status}</td>
-                    <td className="p-2 text-right">{it.rowCount}</td>
-                    <td className="p-2 text-right">
-                      <button
-                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700"
-                        onClick={() => {
-                          setDetailFor(it.uploadId);
-                          setRows([]);
-                          setRowsNextKey(undefined);
-                          void fetchDetail(it.uploadId);
-                        }}
-                      >
-                        View rows
-                      </button>
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td className="p-2 text-gray-400" colSpan={5}>
+                      No uploads yet.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Detail viewer */}
-        {detailFor && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                Rows for: {selectedSummary}
-              </h2>
-              <div className="flex gap-2">
-                {rowsNextKey && (
-                  <button
-                    className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                    onClick={() =>
-                      void fetchDetail(detailFor, rowsNextKey, true)
-                    }
-                    disabled={loadingRows}
-                  >
-                    {loadingRows ? "Loading..." : "Load more rows"}
-                  </button>
-                )}
-                <button
-                  className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                  onClick={() => {
-                    setDetailFor(null);
-                    setRows([]);
-                    setRowsNextKey(undefined);
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-3 overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-300">
-                    <th className="p-2">Patient</th>
-                    <th className="p-2">Test</th>
-                    <th className="p-2">Value</th>
-                    <th className="p-2">Unit</th>
-                    <th className="p-2">Collected</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.length === 0 ? (
-                    <tr>
-                      <td className="p-2 text-gray-400" colSpan={5}>
-                        {loadingRows ? "Loading..." : "No rows yet."}
+                ) : (
+                  items.map((it) => (
+                    <tr key={it.SK} className="border-t border-gray-700">
+                      <td className="p-2">{it.filename}</td>
+                      <td className="p-2">
+                        {new Date(it.uploadedAt).toLocaleString()}
+                      </td>
+                      <td className="p-2">{it.status}</td>
+                      <td className="p-2 text-right">{it.rowCount}</td>
+                      <td className="p-2 text-right">
+                        <button
+                          className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            setDetailFor(it.uploadId);
+                            setRows([]);
+                            setRowsNextKey(undefined);
+                            void fetchDetail(it.uploadId);
+                          }}
+                        >
+                          View rows
+                        </button>
                       </td>
                     </tr>
-                  ) : (
-                    rows.map((r) => (
-                      <tr key={r.SK} className="border-t border-gray-700">
-                        <td className="p-2">{r.patientId}</td>
-                        <td className="p-2">{r.testCode}</td>
-                        <td className="p-2">{r.value}</td>
-                        <td className="p-2">{r.unit}</td>
-                        <td className="p-2">{r.collectedAt}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
-    </main>
+          {/* Detail viewer */}
+          {detailFor && (
+            <div className="mt-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  Rows for: {selectedSummary}
+                </h2>
+                <div className="flex gap-2">
+                  {rowsNextKey && (
+                    <button
+                      className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                      onClick={() =>
+                        void fetchDetail(detailFor, rowsNextKey, true)
+                      }
+                      disabled={loadingRows}
+                    >
+                      {loadingRows ? "Loading..." : "Load more rows"}
+                    </button>
+                  )}
+                  <button
+                    className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                    onClick={() => {
+                      setDetailFor(null);
+                      setRows([]);
+                      setRowsNextKey(undefined);
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-300">
+                      <th className="p-2">Patient</th>
+                      <th className="p-2">Test</th>
+                      <th className="p-2">Value</th>
+                      <th className="p-2">Unit</th>
+                      <th className="p-2">Collected</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.length === 0 ? (
+                      <tr>
+                        <td className="p-2 text-gray-400" colSpan={5}>
+                          {loadingRows ? "Loading..." : "No rows yet."}
+                        </td>
+                      </tr>
+                    ) : (
+                      rows.map((r) => (
+                        <tr key={r.SK} className="border-t border-gray-700">
+                          <td className="p-2">{r.patientId}</td>
+                          <td className="p-2">{r.testCode}</td>
+                          <td className="p-2">{r.value}</td>
+                          <td className="p-2">{r.unit}</td>
+                          <td className="p-2">{r.collectedAt}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </RequireGroup>
   );
 }

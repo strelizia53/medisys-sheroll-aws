@@ -1,5 +1,6 @@
 "use client";
 
+import RequireGroup from "@/components/RequireGroup";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 
@@ -255,190 +256,188 @@ export default function HealthcarePage() {
   }, [items, search, filterClinic, filterStatus]);
 
   return (
-    <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-8">
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-7xl">
-        <h1 className="text-3xl font-bold mb-1 text-center">
-          Healthcare Team – All Uploads
-        </h1>
-        <p className="text-center text-sm text-gray-400">
-          Public read from DynamoDB (ALL uploads). Showing {items.length}{" "}
-          uploads, total rows ~{total}.
-        </p>
-
-        {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>}
-
-        {/* Search + Filters */}
-        <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <input
-            type="text"
-            placeholder="Search by filename..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm w-full md:w-1/3"
-          />
-          <div className="flex gap-3">
-            <select
-              value={filterClinic}
-              onChange={(e) => setFilterClinic(e.target.value)}
-              className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm"
-            >
-              <option value="all">All Clinics</option>
-              {[...new Set(items.map((i) => i.clinicId))].map((cid) => (
-                <option key={cid} value={cid}>
-                  {cid}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm"
-            >
-              <option value="all">All Statuses</option>
-              {[...new Set(items.map((i) => i.status))].map((st) => (
-                <option key={st} value={st}>
-                  {st}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-300">
-                <th className="p-2">Clinic</th>
-                <th className="p-2">File</th>
-                <th className="p-2">Uploaded</th>
-                <th className="p-2">Status</th>
-                <th className="p-2 text-right">Rows</th>
-                <th className="p-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {filteredItems.length === 0 ? (
-                <tr>
-                  <td className="p-2 text-gray-400" colSpan={6}>
-                    No matching uploads.
-                  </td>
-                </tr>
-              ) : (
-                filteredItems.map((it) => (
-                  <tr key={it.SK} className="border-t border-gray-700">
-                    <td className="p-2">{it.clinicId}</td>
-                    <td className="p-2">{it.filename}</td>
-                    <td className="p-2">
-                      {new Date(it.uploadedAt).toLocaleString()}
-                    </td>
-                    <td className="p-2">{it.status}</td>
-                    <td className="p-2 text-right">{it.rowCount}</td>
-                    <td className="p-2 text-right flex gap-2 justify-end">
-                      <button
-                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => {
-                          setSelected({
-                            clinicId: it.clinicId,
-                            uploadId: it.uploadId,
-                            filename: it.filename,
-                          });
-                          setDetailRows([]);
-                          setDetailNextKey(undefined);
-                          void fetchDetail(it.clinicId, it.uploadId, false);
-                        }}
-                      >
-                        View
-                      </button>
-                      <button
-                        className={`px-3 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white ${
-                          deletingId === it.uploadId
-                            ? "opacity-60 cursor-not-allowed"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          void deleteUpload(it.clinicId, it.uploadId)
-                        }
-                        disabled={deletingId === it.uploadId}
-                        title="Requires HealthcareTeam/Admin sign-in"
-                      >
-                        {deletingId === it.uploadId ? "Deleting…" : "Delete"}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Detail panel */}
-        {selected && (
-          <div className="mt-8 border border-gray-700 rounded-lg">
-            <div className="flex items-center justify-between px-4 py-3 bg-gray-700 rounded-t-lg">
-              <h2 className="text-lg font-semibold">
-                {selected.filename} · {selected.clinicId} · #{selected.uploadId}
-              </h2>
-              <div className="flex gap-2">
-                {detailNextKey && (
-                  <button
-                    className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                    onClick={() =>
-                      void fetchDetail(
-                        selected.clinicId,
-                        selected.uploadId,
-                        true,
-                        detailNextKey
-                      )
-                    }
-                    disabled={detailLoading}
-                  >
-                    {detailLoading ? "Loading…" : "Load more rows"}
-                  </button>
-                )}
-                <button
-                  className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                  onClick={() => setSelected(null)}
-                >
-                  Close
-                </button>
-              </div>
+    <RequireGroup allow={["HealthcareTeam"]}>
+      <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-8">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-7xl">
+          <h1 className="text-3xl font-bold mb-1 text-center">
+            Healthcare Team – All Uploads
+          </h1>
+          <p className="text-center text-sm text-gray-400">
+            Public read from DynamoDB (ALL uploads). Showing {items.length}{" "}
+            uploads, total rows ~{total}.
+          </p>
+          {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>}
+          {/* Search + Filters */}
+          <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <input
+              type="text"
+              placeholder="Search by filename..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm w-full md:w-1/3"
+            />
+            <div className="flex gap-3">
+              <select
+                value={filterClinic}
+                onChange={(e) => setFilterClinic(e.target.value)}
+                className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm"
+              >
+                <option value="all">All Clinics</option>
+                {[...new Set(items.map((i) => i.clinicId))].map((cid) => (
+                  <option key={cid} value={cid}>
+                    {cid}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm"
+              >
+                <option value="all">All Statuses</option>
+                {[...new Set(items.map((i) => i.status))].map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
             </div>
-
-            <div className="p-4 overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-300">
-                    <th className="p-2">Patient ID</th>
-                    <th className="p-2">Test Code</th>
-                    <th className="p-2">Value</th>
-                    <th className="p-2">Unit</th>
-                    <th className="p-2">Collected At</th>
+          </div>
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-300">
+                  <th className="p-2">Clinic</th>
+                  <th className="p-2">File</th>
+                  <th className="p-2">Uploaded</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2 text-right">Rows</th>
+                  <th className="p-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td className="p-2 text-gray-400" colSpan={6}>
+                      No matching uploads.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {detailRows.length === 0 ? (
-                    <tr>
-                      <td className="p-2 text-gray-400" colSpan={5}>
-                        {detailLoading ? "Loading rows…" : "No rows"}
+                ) : (
+                  filteredItems.map((it) => (
+                    <tr key={it.SK} className="border-t border-gray-700">
+                      <td className="p-2">{it.clinicId}</td>
+                      <td className="p-2">{it.filename}</td>
+                      <td className="p-2">
+                        {new Date(it.uploadedAt).toLocaleString()}
+                      </td>
+                      <td className="p-2">{it.status}</td>
+                      <td className="p-2 text-right">{it.rowCount}</td>
+                      <td className="p-2 text-right flex gap-2 justify-end">
+                        <button
+                          className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => {
+                            setSelected({
+                              clinicId: it.clinicId,
+                              uploadId: it.uploadId,
+                              filename: it.filename,
+                            });
+                            setDetailRows([]);
+                            setDetailNextKey(undefined);
+                            void fetchDetail(it.clinicId, it.uploadId, false);
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          className={`px-3 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white ${
+                            deletingId === it.uploadId
+                              ? "opacity-60 cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            void deleteUpload(it.clinicId, it.uploadId)
+                          }
+                          disabled={deletingId === it.uploadId}
+                          title="Requires HealthcareTeam/Admin sign-in"
+                        >
+                          {deletingId === it.uploadId ? "Deleting…" : "Delete"}
+                        </button>
                       </td>
                     </tr>
-                  ) : (
-                    detailRows.map((r) => (
-                      <tr key={r.SK} className="border-t border-gray-700">
-                        <td className="p-2">{r.patientId}</td>
-                        <td className="p-2">{r.testCode}</td>
-                        <td className="p-2">{r.value}</td>
-                        <td className="p-2">{r.unit}</td>
-                        <td className="p-2">{r.collectedAt}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
-    </main>
+          {/* Detail panel */}
+          {selected && (
+            <div className="mt-8 border border-gray-700 rounded-lg">
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-700 rounded-t-lg">
+                <h2 className="text-lg font-semibold">
+                  {selected.filename} · {selected.clinicId} · #
+                  {selected.uploadId}
+                </h2>
+                <div className="flex gap-2">
+                  {detailNextKey && (
+                    <button
+                      className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                      onClick={() =>
+                        void fetchDetail(
+                          selected.clinicId,
+                          selected.uploadId,
+                          true,
+                          detailNextKey
+                        )
+                      }
+                      disabled={detailLoading}
+                    >
+                      {detailLoading ? "Loading…" : "Load more rows"}
+                    </button>
+                  )}
+                  <button
+                    className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                    onClick={() => setSelected(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-300">
+                      <th className="p-2">Patient ID</th>
+                      <th className="p-2">Test Code</th>
+                      <th className="p-2">Value</th>
+                      <th className="p-2">Unit</th>
+                      <th className="p-2">Collected At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailRows.length === 0 ? (
+                      <tr>
+                        <td className="p-2 text-gray-400" colSpan={5}>
+                          {detailLoading ? "Loading rows…" : "No rows"}
+                        </td>
+                      </tr>
+                    ) : (
+                      detailRows.map((r) => (
+                        <tr key={r.SK} className="border-t border-gray-700">
+                          <td className="p-2">{r.patientId}</td>
+                          <td className="p-2">{r.testCode}</td>
+                          <td className="p-2">{r.value}</td>
+                          <td className="p-2">{r.unit}</td>
+                          <td className="p-2">{r.collectedAt}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </RequireGroup>
   );
 }
