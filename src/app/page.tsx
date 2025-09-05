@@ -30,10 +30,8 @@ function RoleRedirect() {
       }
     };
 
-    // run on load
     routeByGroup();
 
-    // run after sign-in / token refresh / sign-out
     const unlisten = Hub.listen("auth", ({ payload }) => {
       if (payload.event === "signedIn" || payload.event === "tokenRefresh") {
         routeByGroup();
@@ -56,6 +54,23 @@ export default function Home() {
   return (
     <div className="auth-wrap">
       <Authenticator
+        // ✅ Use formFields prop to rename Username → Email
+        formFields={{
+          signIn: {
+            username: {
+              label: "Email",
+              placeholder: "Enter your email",
+              type: "email",
+            },
+          },
+          signUp: {
+            username: {
+              label: "Email",
+              placeholder: "Enter your email",
+              type: "email",
+            },
+          },
+        }}
         components={{
           Header() {
             return (
@@ -71,7 +86,9 @@ export default function Home() {
             FormFields() {
               return (
                 <>
+                  {/* Default SignUp fields (with Email override from formFields) */}
                   <Authenticator.SignUp.FormFields />
+                  {/* Extra field for role selection */}
                   <SelectField
                     label="User Type"
                     name="custom:userType"
