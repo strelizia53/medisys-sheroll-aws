@@ -95,6 +95,11 @@ export default function HealthcarePage() {
   );
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
 
+  // Search & Filters
+  const [search, setSearch] = useState("");
+  const [filterClinic, setFilterClinic] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+
   const fetchAll = useCallback(
     async (append = false, startKey?: string): Promise<void> => {
       try {
@@ -189,9 +194,9 @@ export default function HealthcarePage() {
 
         setMsg("Deleting…");
         const url = new URL(FN_URL);
-        url.searchParams.set("action", "upload"); // Lambda expects action=upload on DELETE
+        url.searchParams.set("action", "upload");
         url.searchParams.set("uploadId", uploadId);
-        url.searchParams.set("clinicId", clinicId); // staff can delete across clinics
+        url.searchParams.set("clinicId", clinicId);
 
         const res = await fetch(url.toString(), {
           method: "DELETE",
@@ -206,7 +211,6 @@ export default function HealthcarePage() {
           throw new Error(`Delete failed (${res.status})`);
         }
 
-        // Success: remove from list and clear detail if it matches
         setItems((prev) => prev.filter((i) => i.uploadId !== uploadId));
         if (selected?.uploadId === uploadId) {
           setSelected(null);
@@ -233,6 +237,23 @@ export default function HealthcarePage() {
     [items]
   );
 
+  // Apply filters
+  const filteredItems = useMemo(() => {
+    return items.filter((it) => {
+      const matchesSearch =
+        search === "" ||
+        it.filename.toLowerCase().includes(search.toLowerCase());
+
+      const matchesClinic =
+        filterClinic === "all" || it.clinicId === filterClinic;
+
+      const matchesStatus =
+        filterStatus === "all" || it.status === filterStatus;
+
+      return matchesSearch && matchesClinic && matchesStatus;
+    });
+  }, [items, search, filterClinic, filterStatus]);
+
   return (
     <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-8">
       <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-7xl">
@@ -246,23 +267,41 @@ export default function HealthcarePage() {
 
         {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>}
 
-        <div className="mt-4 flex gap-2">
-          <button
-            className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-            onClick={() => void fetchAll(false)}
-            disabled={loading}
-          >
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
-          {nextKey && (
-            <button
-              className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-              onClick={() => void fetchAll(true, nextKey)}
-              disabled={loading}
+        {/* Search + Filters */}
+        <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <input
+            type="text"
+            placeholder="Search by filename..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm w-full md:w-1/3"
+          />
+          <div className="flex gap-3">
+            <select
+              value={filterClinic}
+              onChange={(e) => setFilterClinic(e.target.value)}
+              className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm"
             >
-              Load more
-            </button>
-          )}
+              <option value="all">All Clinics</option>
+              {[...new Set(items.map((i) => i.clinicId))].map((cid) => (
+                <option key={cid} value={cid}>
+                  {cid}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-sm"
+            >
+              <option value="all">All Statuses</option>
+              {[...new Set(items.map((i) => i.status))].map((st) => (
+                <option key={st} value={st}>
+                  {st}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="mt-6 overflow-x-auto">
@@ -278,14 +317,14 @@ export default function HealthcarePage() {
               </tr>
             </thead>
             <tbody>
-              {items.length === 0 ? (
+              {filteredItems.length === 0 ? (
                 <tr>
                   <td className="p-2 text-gray-400" colSpan={6}>
-                    No uploads yet.
+                    No matching uploads.
                   </td>
                 </tr>
               ) : (
-                items.map((it) => (
+                filteredItems.map((it) => (
                   <tr key={it.SK} className="border-t border-gray-700">
                     <td className="p-2">{it.clinicId}</td>
                     <td className="p-2">{it.filename}</td>
@@ -399,15 +438,6 @@ export default function HealthcarePage() {
             </div>
           </div>
         )}
-
-        <p className="mt-4 text-xs text-gray-500">
-          View is public. Delete requires a signed-in user
-          (HealthcareTeam/Admin) — we obtain an ID token via Amplify and call
-          <code className="ml-1">
-            DELETE ?action=upload&amp;uploadId=...&amp;clinicId=...
-          </code>
-          .
-        </p>
       </div>
     </main>
   );

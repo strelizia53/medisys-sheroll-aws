@@ -394,20 +394,6 @@ export default function UploadPage() {
             </div>
           </div>
         )}
-
-        {/* Dev helper */}
-        <button
-          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-          onClick={async () => {
-            const { tokens } = await fetchAuthSession();
-            await navigator.clipboard.writeText(
-              tokens?.idToken?.toString() ?? ""
-            );
-            alert("ID token copied");
-          }}
-        >
-          Copy ID token
-        </button>
       </div>
     </main>
   );

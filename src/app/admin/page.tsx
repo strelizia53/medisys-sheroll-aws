@@ -371,12 +371,12 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold mb-2 text-center">
             Admin Dashboard
           </h1>
-          <p className="text-center text-sm text-gray-400">
+          {/* <p className="text-center text-sm text-gray-400">
             Scenario 1 – Admin: diagnostics, stats, charts, filters, full
             uploads view.
-          </p>
+          </p> */}
 
-          {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>}
+          {/* {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>} */}
 
           {/* KPI Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
