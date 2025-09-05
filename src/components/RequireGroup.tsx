@@ -18,17 +18,20 @@ export default function RequireGroup({
   const router = useRouter();
   const [ok, setOk] = useState<boolean | null>(null);
 
-  // ✅ Memoized function captures the right deps; effect depends on this
-  const routeByGroup = useCallback(async () => {
+  const checkAccess = useCallback(async () => {
     try {
       const session = await fetchAuthSession();
-      const authed = !!session.tokens?.idToken;
-      const groups =
-        (session.tokens?.idToken?.payload["cognito:groups"] as
-          | string[]
-          | undefined) ?? [];
+      const idToken = session.tokens?.idToken;
+      if (!idToken) {
+        setOk(false);
+        router.replace(redirectTo);
+        return;
+      }
 
-      const allowed = authed && groups.some((g) => allow.includes(g));
+      const groups =
+        (idToken.payload["cognito:groups"] as string[] | undefined) ?? [];
+
+      const allowed = groups.some((g) => allow.includes(g));
       setOk(allowed);
 
       if (!allowed) {
@@ -38,12 +41,20 @@ export default function RequireGroup({
       setOk(false);
       router.replace(redirectTo);
     }
-  }, [allow, redirectTo, router]); // 👈 fixes "missing dependency: 'allow'"
+  }, [allow, redirectTo, router]);
 
   useEffect(() => {
-    routeByGroup();
-  }, [routeByGroup]); // 👈 no complex expression in deps
+    void checkAccess();
+  }, [checkAccess]);
 
-  if (ok === null) return null; // or a spinner
-  return <>{children}</>;
+  if (ok === null) {
+    // 👇 Optional loading state while checking
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-400">
+        Checking permissions…
+      </div>
+    );
+  }
+
+  return ok ? <>{children}</> : null;
 }
