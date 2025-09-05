@@ -14,10 +14,8 @@ export default function NavBar() {
   ]);
 
   const isAuthed = authStatus === "authenticated";
-  const username =
-    (user?.username as string | undefined) ??
-    (user?.signInDetails?.loginId as string | undefined) ??
-    null;
+  // Use loginId (usually email) instead of attributes
+  const email = user?.signInDetails?.loginId ?? null;
 
   const buttonGradient =
     "linear-gradient(90deg, var(--amplify-colors-brand-primary-80) 0%, var(--amplify-colors-brand-primary-90) 100%)";
@@ -97,7 +95,7 @@ export default function NavBar() {
                 letterSpacing: 0.2,
               }}
             >
-              {username ? `Hi, ${username}` : "Signed in"}
+              {email ? `Hi, ${email}` : "Signed in"}
             </span>
             <button
               onClick={handleLogout}

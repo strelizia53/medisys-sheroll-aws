@@ -97,9 +97,7 @@ export default function Home() {
         {({ signOut, user }) => (
           <main className="page-shell space-y-4">
             <RoleRedirect />
-            <h1 className="text-2xl font-semibold">
-              Welcome {user?.username}
-            </h1>
+            <h1 className="text-2xl font-semibold">Welcome {user?.username}</h1>
             <button
               className="self-start rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
               onClick={() => signOut?.()}
