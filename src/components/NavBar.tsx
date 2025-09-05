@@ -19,12 +19,14 @@ export default function NavBar() {
     (user?.signInDetails?.loginId as string | undefined) ??
     null;
 
+  const buttonGradient =
+    "linear-gradient(90deg, var(--amplify-colors-brand-primary-80) 0%, var(--amplify-colors-brand-primary-90) 100%)";
+  const buttonGradientHover =
+    "linear-gradient(90deg, var(--amplify-colors-brand-primary-90) 0%, var(--amplify-colors-brand-primary-80) 100%)";
+
   const handleLogout = async () => {
-    try {
-      await signOut(); // Amplify v6 signOut
-    } finally {
-      router.replace("/");
-    }
+    await signOut();
+    router.replace("/");
   };
 
   // Optional: avoid brief flicker while Amplify initializes
@@ -40,16 +42,16 @@ export default function NavBar() {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0.75rem 2rem",
-        borderBottom: "1px solid #e5e7eb",
-        background: "linear-gradient(90deg, #f8fafc 0%, #e0e7ff 100%)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        borderBottom: "1px solid #1e293b",
+        background: "linear-gradient(90deg, #1e1b4b 0%, #312e81 100%)",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
       }}
     >
       <Link
         href="/"
         style={{
           textDecoration: "none",
-          color: "#3730a3",
+          color: "#f8fafc",
           fontWeight: 700,
           fontSize: 22,
           letterSpacing: 1,
@@ -65,7 +67,12 @@ export default function NavBar() {
           fill="none"
           style={{ marginRight: 6 }}
         >
-          <rect width="24" height="24" rx="6" fill="#6366f1" />
+          <rect
+            width="24"
+            height="24"
+            rx="6"
+            fill="var(--amplify-colors-brand-primary-80)"
+          />
           <path
             d="M12 7v10M7 12h10"
             stroke="#fff"
@@ -82,8 +89,8 @@ export default function NavBar() {
             <span
               style={{
                 fontSize: 15,
-                color: "#6366f1",
-                background: "#eef2ff",
+                color: "var(--amplify-colors-brand-primary-90)",
+                background: "rgba(129,140,248,0.15)",
                 padding: "0.3rem 0.8rem",
                 borderRadius: 20,
                 fontWeight: 500,
@@ -98,21 +105,21 @@ export default function NavBar() {
                 padding: "0.45rem 1.1rem",
                 borderRadius: 8,
                 border: "none",
-                background: "linear-gradient(90deg, #6366f1 0%, #818cf8 100%)",
+                background: buttonGradient,
                 color: "#fff",
                 fontWeight: 600,
                 fontSize: 15,
                 cursor: "pointer",
-                boxShadow: "0 1px 4px rgba(99,102,241,0.08)",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
                 transition: "background 0.2s",
               }}
               onMouseOver={(e) =>
                 ((e.target as HTMLButtonElement).style.background =
-                  "linear-gradient(90deg, #818cf8 0%, #6366f1 100%)")
+                  buttonGradientHover)
               }
               onMouseOut={(e) =>
                 ((e.target as HTMLButtonElement).style.background =
-                  "linear-gradient(90deg, #6366f1 0%, #818cf8 100%)")
+                  buttonGradient)
               }
             >
               Logout
@@ -125,22 +132,22 @@ export default function NavBar() {
               padding: "0.45rem 1.1rem",
               borderRadius: 8,
               border: "none",
-              background: "linear-gradient(90deg, #6366f1 0%, #818cf8 100%)",
+              background: buttonGradient,
               color: "#fff",
               fontWeight: 600,
               fontSize: 15,
               textDecoration: "none",
-              boxShadow: "0 1px 4px rgba(99,102,241,0.08)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
               transition: "background 0.2s",
               display: "inline-block",
             }}
             onMouseOver={(e) =>
               ((e.target as HTMLAnchorElement).style.background =
-                "linear-gradient(90deg, #818cf8 0%, #6366f1 100%)")
+                buttonGradientHover)
             }
             onMouseOut={(e) =>
               ((e.target as HTMLAnchorElement).style.background =
-                "linear-gradient(90deg, #6366f1 0%, #818cf8 100%)")
+                buttonGradient)
             }
           >
             Sign in
