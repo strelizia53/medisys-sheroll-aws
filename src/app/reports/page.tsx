@@ -267,6 +267,27 @@ export default function HealthcarePage() {
             uploads, total rows ~{total}.
           </p>
           {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>}
+
+          {/* Refresh + Load More */}
+          <div className="mt-4 flex gap-2">
+            <button
+              className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+              onClick={() => void fetchAll(false)}
+              disabled={loading}
+            >
+              {loading ? "Refreshing…" : "Refresh"}
+            </button>
+            {nextKey && (
+              <button
+                className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                onClick={() => void fetchAll(true, nextKey)}
+                disabled={loading}
+              >
+                Load more
+              </button>
+            )}
+          </div>
+
           {/* Search + Filters */}
           <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <input
@@ -303,6 +324,8 @@ export default function HealthcarePage() {
               </select>
             </div>
           </div>
+
+          {/* Uploads Table */}
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -369,6 +392,7 @@ export default function HealthcarePage() {
               </tbody>
             </table>
           </div>
+
           {/* Detail panel */}
           {selected && (
             <div className="mt-8 border border-gray-700 rounded-lg">

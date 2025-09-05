@@ -341,7 +341,6 @@ export default function AdminPage() {
         throw new Error(`Update failed (${res.status})`);
       }
 
-      // reflect changes locally
       setItems((prev) =>
         prev.map((it) =>
           it.uploadId === editId
@@ -371,12 +370,42 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold mb-2 text-center">
             Admin Dashboard
           </h1>
-          {/* <p className="text-center text-sm text-gray-400">
-            Scenario 1 – Admin: diagnostics, stats, charts, filters, full
-            uploads view.
-          </p> */}
 
-          {/* {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>} */}
+          {/* Status message */}
+          {msg && <p className="mt-3 text-sm text-amber-300">{msg}</p>}
+
+          {/* Diagnostics */}
+          <div className="grid md:grid-cols-2 gap-4 mt-6">
+            <div className="border border-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="font-semibold">Lambda · Poke</h2>
+                <button
+                  className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                  onClick={() => void runPoke()}
+                >
+                  Run
+                </button>
+              </div>
+              <pre className="text-xs bg-gray-900 p-3 rounded overflow-x-auto">
+                {poke ? JSON.stringify(poke, null, 2) : "—"}
+              </pre>
+            </div>
+
+            <div className="border border-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="font-semibold">Auth · Verify (Admin)</h2>
+                <button
+                  className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                  onClick={() => void runAuthDiag()}
+                >
+                  Run
+                </button>
+              </div>
+              <pre className="text-xs bg-gray-900 p-3 rounded overflow-x-auto">
+                {auth ? JSON.stringify(auth, null, 2) : "—"}
+              </pre>
+            </div>
+          </div>
 
           {/* KPI Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
@@ -462,6 +491,26 @@ export default function AdminPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Refresh + Load More */}
+          <div className="mt-4 flex gap-2">
+            <button
+              className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+              onClick={() => void loadAll(false)}
+              disabled={loading}
+            >
+              {loading ? "Refreshing…" : "Refresh All Uploads"}
+            </button>
+            {nextKey && (
+              <button
+                className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                onClick={() => void loadAll(true, nextKey)}
+                disabled={loading}
+              >
+                Load more
+              </button>
+            )}
           </div>
 
           {/* All uploads */}
