@@ -481,7 +481,7 @@ export default function AdminPage() {
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td className="p-2 text-gray-400" colSpan={6}>
-                      No matching uploads.
+                      No matching uploads found.
                     </td>
                   </tr>
                 ) : (
