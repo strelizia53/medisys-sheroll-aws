@@ -330,7 +330,7 @@ export default function HealthcarePage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-300">
-                  <th className="p-2">Clinic</th>
+                  <th className="p-2">Uploaded By</th>
                   <th className="p-2">File</th>
                   <th className="p-2">Uploaded</th>
                   <th className="p-2">Status</th>
@@ -341,14 +341,14 @@ export default function HealthcarePage() {
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td className="p-2 text-gray-400" colSpan={6}>
+                    <td className="p-2 text-gray-400" colSpan={7}>
                       No matching uploads.
                     </td>
                   </tr>
                 ) : (
                   filteredItems.map((it) => (
                     <tr key={it.SK} className="border-t border-gray-700">
-                      <td className="p-2">{it.clinicId}</td>
+                      <td className="p-2">{it.uploadedByEmail || "Unknown"}</td>
                       <td className="p-2">{it.filename}</td>
                       <td className="p-2">
                         {new Date(it.uploadedAt).toLocaleString()}
@@ -381,7 +381,6 @@ export default function HealthcarePage() {
                             void deleteUpload(it.clinicId, it.uploadId)
                           }
                           disabled={deletingId === it.uploadId}
-                          title="Requires HealthcareTeam/Admin sign-in"
                         >
                           {deletingId === it.uploadId ? "Deleting…" : "Delete"}
                         </button>
