@@ -53,22 +53,23 @@ async function readJsonSafe(res: Response): Promise<unknown> {
   }
   return (await res.json()) as unknown;
 }
+
 function isErrorResponse(x: unknown): x is ErrorResponse {
   if (typeof x !== "object" || x === null) return false;
-  return (
-    "ok" in (x as Record<string, unknown>) &&
-    (x as Record<string, unknown>).ok === false
-  );
+  const r = x as Record<string, unknown>;
+  return "ok" in r && r.ok === false;
 }
 
 function isListResponse(x: unknown): x is ListResponse {
   if (typeof x !== "object" || x === null) return false;
-  return Array.isArray((x as Record<string, unknown>).items);
+  const r = x as Record<string, unknown>;
+  return Array.isArray(r.items);
 }
 
 function isDetailResponse(x: unknown): x is DetailResponse {
   if (typeof x !== "object" || x === null) return false;
-  return Array.isArray((x as Record<string, unknown>).rows);
+  const r = x as Record<string, unknown>;
+  return Array.isArray(r.rows);
 }
 
 export default function HealthcarePage() {
@@ -116,26 +117,30 @@ export default function HealthcarePage() {
         }
         if (!isListResponse(data)) throw new Error("Unexpected payload");
 
-        // --- DEDUPE by clinicId+uploadId (prevents any accidental doubles) ---
-        const merge = append ? [...items, ...data.items] : data.items;
-        const byKey = new Map<string, UploadMeta>();
-        for (const it of merge) {
-          const k = `${it.clinicId}|${it.uploadId}`;
-          const prev = byKey.get(k);
-          if (!prev) byKey.set(k, it);
-          else {
-            // keep the newer uploadedAt if both present
-            const ta = Date.parse(it.uploadedAt || "");
-            const tb = Date.parse(prev.uploadedAt || "");
-            byKey.set(k, isNaN(ta) || isNaN(tb) ? it : ta >= tb ? it : prev);
+        // De-dupe inside functional updater so fetchAll doesn't depend on `items`
+        setItems((prev) => {
+          const merge = append ? [...prev, ...data.items] : data.items;
+          const byKey = new Map<string, UploadMeta>();
+          for (const it of merge) {
+            const k = `${it.clinicId}|${it.uploadId}`;
+            const prevIt = byKey.get(k);
+            if (!prevIt) {
+              byKey.set(k, it);
+            } else {
+              const ta = Date.parse(it.uploadedAt || "");
+              const tb = Date.parse(prevIt.uploadedAt || "");
+              byKey.set(
+                k,
+                isNaN(ta) || isNaN(tb) ? it : ta >= tb ? it : prevIt
+              );
+            }
           }
-        }
-        const deduped = Array.from(byKey.values()).sort(
-          (a, b) =>
-            Date.parse(b.uploadedAt || "") - Date.parse(a.uploadedAt || "")
-        );
+          return Array.from(byKey.values()).sort(
+            (a, b) =>
+              Date.parse(b.uploadedAt || "") - Date.parse(a.uploadedAt || "")
+          );
+        });
 
-        setItems(deduped);
         setNextKey(data.nextStartKey);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
@@ -144,7 +149,7 @@ export default function HealthcarePage() {
         setLoading(false);
       }
     },
-    [items]
+    [] // 👈 stable, no `items` dependency
   );
 
   const fetchDetail = useCallback(
@@ -250,7 +255,7 @@ export default function HealthcarePage() {
 
   useEffect(() => {
     void fetchAll(false);
-  }, [fetchAll]);
+  }, [fetchAll]); // fetchAll is stable; effect runs once (twice in dev StrictMode)
 
   const total = useMemo(
     () => items.reduce((acc, it) => acc + (it.rowCount || 0), 0),
