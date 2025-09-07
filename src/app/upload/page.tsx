@@ -42,7 +42,7 @@ type DetailResponse = {
 };
 type ErrorResponse = { ok: false; error: string; message?: string };
 
-// ---- HELPERS (no `any`) ----
+// ---- HELPERS ----
 async function readJsonSafe(res: Response): Promise<unknown> {
   const ct = res.headers.get("content-type") || "";
   if (!ct.includes("application/json")) {
@@ -71,24 +71,30 @@ function isDetailResponse(x: unknown): x is DetailResponse {
 }
 
 export default function UploadPage() {
-  // UI state
   const [msg, setMsg] = useState<string>("");
   const [loadingList, setLoadingList] = useState<boolean>(false);
   const [items, setItems] = useState<UploadMeta[]>([]);
   const [nextKey, setNextKey] = useState<string | undefined>(undefined);
 
-  // detail viewer
   const [detailFor, setDetailFor] = useState<string | null>(null);
   const [rows, setRows] = useState<DetailRow[]>([]);
   const [rowsNextKey, setRowsNextKey] = useState<string | undefined>(undefined);
   const [loadingRows, setLoadingRows] = useState<boolean>(false);
 
+  const [currentSub, setCurrentSub] = useState<string>("");
+
   const getIdToken = useCallback(async (): Promise<string> => {
     const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString() ?? "";
+    const idToken = session.tokens?.idToken;
+    if (idToken) {
+      const payload = idToken.payload as Record<string, unknown>;
+      const sub = (payload["sub"] as string) ?? "";
+      setCurrentSub(sub);
+    }
+    return idToken?.toString() ?? "";
   }, []);
 
-  // ------- READ: list uploads from Lambda -------
+  // ------- READ: list uploads -------
   const fetchList = useCallback(
     async (append = false, startKey?: string): Promise<void> => {
       try {
@@ -114,7 +120,12 @@ export default function UploadPage() {
         }
         if (!isListResponse(data)) throw new Error("Unexpected list payload");
 
-        setItems((prev) => (append ? [...prev, ...data.items] : data.items));
+        // filter client-side: only show uploads by current user
+        const filtered = data.items.filter(
+          (it) => it.uploadedBySub === currentSub
+        );
+
+        setItems((prev) => (append ? [...prev, ...filtered] : filtered));
         setNextKey(data.nextStartKey);
         setMsg("");
       } catch (e) {
@@ -124,10 +135,10 @@ export default function UploadPage() {
         setLoadingList(false);
       }
     },
-    [getIdToken]
+    [getIdToken, currentSub]
   );
 
-  // ------- READ: detail rows for one upload -------
+  // ------- READ: detail rows -------
   const fetchDetail = useCallback(
     async (
       uploadId: string,
@@ -172,12 +183,10 @@ export default function UploadPage() {
     [getIdToken]
   );
 
-  // initial load
   useEffect(() => {
     void fetchList(false);
   }, [fetchList]);
 
-  // ------- WRITE: upload file to Lambda -------
   const upload = useCallback(
     async (file: File): Promise<void> => {
       try {
@@ -200,7 +209,6 @@ export default function UploadPage() {
         });
 
         const dataUnknown = await readJsonSafe(res);
-        // narrow to success/err structure loosely
         const okFlag =
           typeof dataUnknown === "object" &&
           dataUnknown !== null &&
@@ -213,7 +221,7 @@ export default function UploadPage() {
               ? String((dataUnknown as { rowCount?: unknown }).rowCount)
               : "?";
           setMsg(`Uploaded ✓ rows=${rowsCount}`);
-          await fetchList(false); // refresh list
+          await fetchList(false);
         } else {
           const message =
             typeof dataUnknown === "object" &&
@@ -232,7 +240,6 @@ export default function UploadPage() {
     [getIdToken, fetchList]
   );
 
-  // pretty selected filename
   const selectedSummary = useMemo(() => {
     if (!detailFor) return "";
     const m = items.find((i) => i.uploadId === detailFor);
@@ -246,9 +253,8 @@ export default function UploadPage() {
       <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-10">
         <div className="bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-4xl">
           <h1 className="text-3xl font-bold mb-6 text-center">
-            Clinic Uploads
+            Clinic Uploads (My Files Only)
           </h1>
-          {/* Uploader */}
           <label className="block mb-4">
             <span className="block mb-2 text-gray-300">Choose CSV file</span>
             <input
@@ -262,6 +268,7 @@ export default function UploadPage() {
             />
           </label>
           <p className="mt-3 text-sm min-h-[1.5em] text-gray-400">{msg}</p>
+
           <div className="flex items-center gap-3">
             <button
               className="mt-2 px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm"
@@ -280,7 +287,7 @@ export default function UploadPage() {
               </button>
             )}
           </div>
-          {/* My uploads */}
+
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -327,36 +334,23 @@ export default function UploadPage() {
               </tbody>
             </table>
           </div>
-          {/* Detail viewer */}
+
           {detailFor && (
             <div className="mt-8">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   Rows for: {selectedSummary}
                 </h2>
-                <div className="flex gap-2">
-                  {rowsNextKey && (
-                    <button
-                      className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                      onClick={() =>
-                        void fetchDetail(detailFor, rowsNextKey, true)
-                      }
-                      disabled={loadingRows}
-                    >
-                      {loadingRows ? "Loading..." : "Load more rows"}
-                    </button>
-                  )}
-                  <button
-                    className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                    onClick={() => {
-                      setDetailFor(null);
-                      setRows([]);
-                      setRowsNextKey(undefined);
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
+                <button
+                  className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                  onClick={() => {
+                    setDetailFor(null);
+                    setRows([]);
+                    setRowsNextKey(undefined);
+                  }}
+                >
+                  Close
+                </button>
               </div>
               <div className="mt-3 overflow-x-auto">
                 <table className="min-w-full text-sm">
