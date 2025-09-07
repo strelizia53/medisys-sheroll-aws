@@ -8,7 +8,6 @@ import { fetchAuthSession } from "aws-amplify/auth";
 const FN_URL =
   "https://s47e7p42x7j5qgbuj2vkqcg5qe0blhxt.lambda-url.ap-south-1.on.aws/";
 
-/* Types matching Lambda public responses */
 type UploadMeta = {
   PK: string;
   SK: string;
@@ -55,26 +54,21 @@ async function readJsonSafe(res: Response): Promise<unknown> {
   return (await res.json()) as unknown;
 }
 function isErrorResponse(x: unknown): x is ErrorResponse {
+  if (typeof x !== "object" || x === null) return false;
   return (
-    typeof x === "object" &&
-    x !== null &&
-    "ok" in x &&
-    (x as { ok?: unknown }).ok === false
+    "ok" in (x as Record<string, unknown>) &&
+    (x as Record<string, unknown>).ok === false
   );
 }
+
 function isListResponse(x: unknown): x is ListResponse {
-  return (
-    typeof x === "object" &&
-    x !== null &&
-    Array.isArray((x as { items?: unknown }).items)
-  );
+  if (typeof x !== "object" || x === null) return false;
+  return Array.isArray((x as Record<string, unknown>).items);
 }
+
 function isDetailResponse(x: unknown): x is DetailResponse {
-  return (
-    typeof x === "object" &&
-    x !== null &&
-    Array.isArray((x as { rows?: unknown }).rows)
-  );
+  if (typeof x !== "object" || x === null) return false;
+  return Array.isArray((x as Record<string, unknown>).rows);
 }
 
 export default function HealthcarePage() {
@@ -122,7 +116,26 @@ export default function HealthcarePage() {
         }
         if (!isListResponse(data)) throw new Error("Unexpected payload");
 
-        setItems((prev) => (append ? [...prev, ...data.items] : data.items));
+        // --- DEDUPE by clinicId+uploadId (prevents any accidental doubles) ---
+        const merge = append ? [...items, ...data.items] : data.items;
+        const byKey = new Map<string, UploadMeta>();
+        for (const it of merge) {
+          const k = `${it.clinicId}|${it.uploadId}`;
+          const prev = byKey.get(k);
+          if (!prev) byKey.set(k, it);
+          else {
+            // keep the newer uploadedAt if both present
+            const ta = Date.parse(it.uploadedAt || "");
+            const tb = Date.parse(prev.uploadedAt || "");
+            byKey.set(k, isNaN(ta) || isNaN(tb) ? it : ta >= tb ? it : prev);
+          }
+        }
+        const deduped = Array.from(byKey.values()).sort(
+          (a, b) =>
+            Date.parse(b.uploadedAt || "") - Date.parse(a.uploadedAt || "")
+        );
+
+        setItems(deduped);
         setNextKey(data.nextStartKey);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
@@ -131,7 +144,7 @@ export default function HealthcarePage() {
         setLoading(false);
       }
     },
-    []
+    [items]
   );
 
   const fetchDetail = useCallback(
@@ -205,15 +218,21 @@ export default function HealthcarePage() {
         });
 
         const data = await readJsonSafe(res);
-
         if (!res.ok) {
           if (isErrorResponse(data))
             throw new Error(data.message ?? data.error);
           throw new Error(`Delete failed (${res.status})`);
         }
 
-        setItems((prev) => prev.filter((i) => i.uploadId !== uploadId));
-        if (selected?.uploadId === uploadId) {
+        setItems((prev) =>
+          prev.filter(
+            (i) => !(i.clinicId === clinicId && i.uploadId === uploadId)
+          )
+        );
+        if (
+          selected?.uploadId === uploadId &&
+          selected?.clinicId === clinicId
+        ) {
           setSelected(null);
           setDetailRows([]);
           setDetailNextKey(undefined);
@@ -238,19 +257,16 @@ export default function HealthcarePage() {
     [items]
   );
 
-  // Apply filters
+  // Filters
   const filteredItems = useMemo(() => {
     return items.filter((it) => {
       const matchesSearch =
         search === "" ||
         it.filename.toLowerCase().includes(search.toLowerCase());
-
       const matchesClinic =
         filterClinic === "all" || it.clinicId === filterClinic;
-
       const matchesStatus =
         filterStatus === "all" || it.status === filterStatus;
-
       return matchesSearch && matchesClinic && matchesStatus;
     });
   }, [items, search, filterClinic, filterStatus]);
@@ -331,6 +347,7 @@ export default function HealthcarePage() {
               <thead>
                 <tr className="text-left text-gray-300">
                   <th className="p-2">Uploaded By</th>
+                  <th className="p-2">Clinic</th>
                   <th className="p-2">File</th>
                   <th className="p-2">Uploaded</th>
                   <th className="p-2">Status</th>
@@ -347,8 +364,12 @@ export default function HealthcarePage() {
                   </tr>
                 ) : (
                   filteredItems.map((it) => (
-                    <tr key={it.SK} className="border-t border-gray-700">
+                    <tr
+                      key={`${it.clinicId}|${it.uploadId}`}
+                      className="border-t border-gray-700"
+                    >
                       <td className="p-2">{it.uploadedByEmail || "Unknown"}</td>
+                      <td className="p-2">{it.clinicId}</td>
                       <td className="p-2">{it.filename}</td>
                       <td className="p-2">
                         {new Date(it.uploadedAt).toLocaleString()}
