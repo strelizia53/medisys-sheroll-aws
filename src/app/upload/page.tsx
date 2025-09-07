@@ -253,7 +253,7 @@ export default function UploadPage() {
       <main className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-10">
         <div className="bg-gray-800 rounded-lg shadow-lg p-8 w-full max-w-4xl">
           <h1 className="text-3xl font-bold mb-6 text-center">
-            Clinic Uploads (My Files Only)
+            Clinic Uploads
           </h1>
           <label className="block mb-4">
             <span className="block mb-2 text-gray-300">Choose CSV file</span>
